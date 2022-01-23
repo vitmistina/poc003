@@ -8,6 +8,7 @@
 
 import React from 'react';
 import {RSA} from 'react-native-rsa-native';
+import RNFS from 'react-native-fs';
 
 import pubCertificate from './pub-cert';
 
@@ -35,8 +36,10 @@ export default function App() {
   const [fullName, setName] = React.useState('');
 
   const onPressSave = async () => {
+    const path = `${RNFS.DocumentDirectoryPath}/${Date.now()}.encrypted`;
     const payload = JSON.stringify({fullName});
     const encrypted = await RSA.encrypt(payload, pubCertificate);
+    await RNFS.writeFile(path, encrypted, 'utf8');
     setName('');
   };
 
