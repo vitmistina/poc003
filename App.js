@@ -82,6 +82,8 @@ export default function App() {
       RNFS.ExternalStorageDirectoryPath
     }/Download/${Date.now()}.txt`;
     const payload = JSON.stringify({fullName, signature});
+
+    // TODO https://stackoverflow.com/questions/10007147/getting-a-illegalblocksizeexception-data-must-not-be-longer-than-256-bytes-when
     const encrypted = await RSA.encrypt(payload, pubCertificate);
     requestPermissions();
     await RNFS.writeFile(path, encrypted, 'utf8');
