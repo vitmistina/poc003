@@ -9,6 +9,7 @@
 import React from 'react';
 import {RSA} from 'react-native-rsa-native';
 import RNFS from 'react-native-fs';
+import Signature from 'react-native-signature-canvas';
 
 import pubCertificate from './pub-cert';
 
@@ -22,6 +23,8 @@ import {
   useColorScheme,
   View,
   Button,
+  PermissionsAndroid,
+  Image,
 } from 'react-native';
 
 import {
@@ -35,12 +38,57 @@ import {
 export default function App() {
   const [fullName, setName] = React.useState('');
 
-  const onPressSave = async () => {
-    const path = `${RNFS.DocumentDirectoryPath}/${Date.now()}.encrypted`;
-    const payload = JSON.stringify({fullName});
-    const encrypted = await RSA.encrypt(payload, pubCertificate);
-    await RNFS.writeFile(path, encrypted, 'utf8');
+  const requestPermissions = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: 'Cool Photo App Camera Permission',
+          message:
+            'Cool Photo App needs access to your camera ' +
+            'so you can take awesome pictures.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('You can use the camera');
+      } else {
+        console.error('Camera permission denied');
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  const onPressNew = async () => {
     setName('');
+    setSign(null);
+  };
+
+  const [signature, setSign] = React.useState(null);
+
+  const handleOK = async signature => {
+    const requiredVariable = 'fullName';
+    if (!eval(requiredVariable)) {
+      console.error(`Chybí vyplnit ještě ${requiredVariable}`);
+      return;
+    }
+
+    setSign(signature);
+
+    const path = `${
+      RNFS.ExternalStorageDirectoryPath
+    }/Download/${Date.now()}.txt`;
+    const payload = JSON.stringify({fullName, signature});
+    const encrypted = await RSA.encrypt(payload, pubCertificate);
+    requestPermissions();
+    await RNFS.writeFile(path, encrypted, 'utf8');
+  };
+
+  const handleEmpty = () => {
+    console.log('Empty');
   };
 
   return (
@@ -50,7 +98,29 @@ export default function App() {
       <TextInput style={styles.input} value={fullName} onChangeText={setName} />
       {/* TODO add signature field */}
 
-      <Button onPress={onPressSave} title="Uložit" color="#ea650d" />
+      {signature ? (
+        <View>
+          <Image
+            resizeMode={'contain'}
+            style={{width: 335, height: 114}}
+            source={{uri: signature}}
+          />
+          <Button onPress={onPressNew} title="Nový formulář" color="#ea650d" />
+        </View>
+      ) : (
+        <Signature
+          onOK={handleOK}
+          onEmpty={handleEmpty}
+          descriptionText="Podpis"
+          clearText="Nový podpis"
+          confirmText="Uložit podpis"
+          webStyle={`.m-signature-pad--footer
+            .button {
+              background-color: #ea650d;
+              color: #ffffff;
+            }`}
+        />
+      )}
       <StatusBar style="auto" />
     </View>
   );
