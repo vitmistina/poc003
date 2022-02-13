@@ -1,0 +1,1 @@
+((Get-Content -path .\node_modules\react-native-aes-crypto\android\build.gradle -Raw) -replace '''maven''','''maven-publish''') | Set-Content -Path .\node_modules\react-native-aes-crypto\android\build.gradle
