@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import Aes from 'react-native-aes-crypto';
 import {RSA} from 'react-native-rsa-native';
 import RNFS from 'react-native-fs';
 import Signature from 'react-native-signature-canvas';
@@ -14,26 +15,15 @@ import Signature from 'react-native-signature-canvas';
 import pubCertificate from './pub-cert';
 
 import {
-  SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
-  useColorScheme,
   View,
   Button,
   PermissionsAndroid,
   Image,
 } from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
 
 export default function App() {
   const [fullName, setName] = React.useState('');
@@ -43,19 +33,17 @@ export default function App() {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
         {
-          title: 'Cool Photo App Camera Permission',
-          message:
-            'Cool Photo App needs access to your camera ' +
-            'so you can take awesome pictures.',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
+          title: 'Pozadavek k ukladani dat na pametovou kartu',
+          message: 'Tato aplikace potrebuje povoleni ukladat data',
+          buttonNeutral: 'Pozadat pozdeji',
+          buttonNegative: 'Zrusit',
+          buttonPositive: 'Povolit',
         },
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('You can use the camera');
+        console.log('Aplikace nyni muze ukladat data na pametovou kartu');
       } else {
-        console.error('Camera permission denied');
+        console.error('Povoleni nebylo udeleno');
       }
     } catch (err) {
       console.warn(err);
@@ -78,15 +66,20 @@ export default function App() {
 
     setSign(signature);
 
-    const path = `${
-      RNFS.ExternalStorageDirectoryPath
-    }/Download/${Date.now()}.txt`;
+    const path = `${RNFS.ExternalStorageDirectoryPath}/Download/${Date.now()}`;
     const payload = JSON.stringify({fullName, signature});
 
-    // TODO https://stackoverflow.com/questions/10007147/getting-a-illegalblocksizeexception-data-must-not-be-longer-than-256-bytes-when
-    const encrypted = await RSA.encrypt(payload, pubCertificate);
+    const key = await Aes.randomKey(32);
+    const iv = await Aes.randomKey(16);
+
+    const encrypted = await Aes.encrypt(payload, key, iv, 'aes-256-cbc');
+
+    const encryptedKey = await RSA.encrypt(key, pubCertificate);
+    const encryptedIv = await RSA.encrypt(iv, pubCertificate);
     requestPermissions();
-    await RNFS.writeFile(path, encrypted, 'utf8');
+    await RNFS.writeFile(`${path}.encrypted`, encrypted, 'utf8');
+    await RNFS.writeFile(`${path}.key`, encryptedKey, 'utf8');
+    await RNFS.writeFile(`${path}.initializationVecor`, encryptedIv, 'utf8');
   };
 
   const handleEmpty = () => {
@@ -98,7 +91,6 @@ export default function App() {
       {/* TODO add all fields */}
       <Text>Jméno a příjmení</Text>
       <TextInput style={styles.input} value={fullName} onChangeText={setName} />
-      {/* TODO add signature field */}
 
       {signature ? (
         <View>
