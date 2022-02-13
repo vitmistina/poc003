@@ -23,7 +23,10 @@ import {
   Button,
   PermissionsAndroid,
   Image,
+  LogBox,
 } from 'react-native';
+
+LogBox.ignoreLogs(['new NativeEventEmitter']);
 
 export default function App() {
   const [fullName, setName] = React.useState('');
