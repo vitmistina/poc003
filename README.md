@@ -1,0 +1,1 @@
+Projekt nesmí být na cestě, která obsahuje diakritiku
