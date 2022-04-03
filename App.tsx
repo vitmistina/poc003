@@ -7,7 +7,6 @@
  */
 
 import React from 'react';
-import Aes from 'react-native-aes-crypto';
 import {RSA} from 'react-native-rsa-native';
 import RNFS from 'react-native-fs';
 import Signature from 'react-native-signature-canvas';
@@ -15,6 +14,7 @@ import Signature from 'react-native-signature-canvas';
 import pubCertificate from './pub-cert';
 
 import {
+  NativeModules,
   StatusBar,
   StyleSheet,
   Text,
@@ -25,6 +25,8 @@ import {
   Image,
   LogBox,
 } from 'react-native';
+
+const Aes = NativeModules.Aes;
 
 LogBox.ignoreLogs(['new NativeEventEmitter']);
 
@@ -55,22 +57,22 @@ export default function App() {
 
   const onPressNew = async () => {
     setName('');
-    setSign(null);
+    setSign(undefined);
   };
 
-  const [signature, setSign] = React.useState(null);
+  const [signature, setSign] = React.useState<string>();
 
-  const handleOK = async signature => {
+  const handleOK = async (newSignature: string) => {
     const requiredVariable = 'fullName';
     if (!eval(requiredVariable)) {
       console.error(`Chybí vyplnit ještě ${requiredVariable}`);
       return;
     }
 
-    setSign(signature);
+    setSign(newSignature);
 
     const path = `${RNFS.ExternalStorageDirectoryPath}/Download/${Date.now()}`;
-    const payload = JSON.stringify({fullName, signature});
+    const payload = JSON.stringify({fullName, newSignature});
 
     const key = await Aes.randomKey(32);
     const iv = await Aes.randomKey(16);
@@ -99,7 +101,7 @@ export default function App() {
         <View>
           <Image
             resizeMode={'contain'}
-            style={{width: 335, height: 114}}
+            style={styles.image}
             source={{uri: signature}}
           />
           <Button onPress={onPressNew} title="Nový formulář" color="#ea650d" />
@@ -118,7 +120,7 @@ export default function App() {
             }`}
         />
       )}
-      <StatusBar style="auto" />
+      <StatusBar />
     </View>
   );
 }
@@ -136,6 +138,10 @@ const styles = StyleSheet.create({
     margin: 12,
     borderWidth: 1,
     padding: 10,
+  },
+  image: {
+    width: 335,
+    height: 114,
   },
 });
 
