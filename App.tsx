@@ -7,7 +7,6 @@
  */
 
 import React from 'react';
-import Aes from 'react-native-aes-crypto';
 import {RSA} from 'react-native-rsa-native';
 import RNFS from 'react-native-fs';
 import Signature from 'react-native-signature-canvas';
@@ -15,6 +14,7 @@ import Signature from 'react-native-signature-canvas';
 import pubCertificate from './pub-cert';
 
 import {
+  NativeModules,
   StatusBar,
   StyleSheet,
   Text,
@@ -25,6 +25,8 @@ import {
   Image,
   LogBox,
 } from 'react-native';
+
+const Aes = NativeModules.Aes;
 
 LogBox.ignoreLogs(['new NativeEventEmitter']);
 
