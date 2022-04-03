@@ -101,7 +101,7 @@ export default function App() {
         <View>
           <Image
             resizeMode={'contain'}
-            style={{width: 335, height: 114}}
+            style={styles.image}
             source={{uri: signature}}
           />
           <Button onPress={onPressNew} title="Nový formulář" color="#ea650d" />
@@ -120,7 +120,7 @@ export default function App() {
             }`}
         />
       )}
-      <StatusBar style="auto" />
+      <StatusBar />
     </View>
   );
 }
@@ -138,6 +138,10 @@ const styles = StyleSheet.create({
     margin: 12,
     borderWidth: 1,
     padding: 10,
+  },
+  image: {
+    width: 335,
+    height: 114,
   },
 });
 
