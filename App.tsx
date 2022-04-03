@@ -55,22 +55,22 @@ export default function App() {
 
   const onPressNew = async () => {
     setName('');
-    setSign(null);
+    setSign(undefined);
   };
 
-  const [signature, setSign] = React.useState(null);
+  const [signature, setSign] = React.useState<string>();
 
-  const handleOK = async signature => {
+  const handleOK = async (newSignature: string) => {
     const requiredVariable = 'fullName';
     if (!eval(requiredVariable)) {
       console.error(`Chybí vyplnit ještě ${requiredVariable}`);
       return;
     }
 
-    setSign(signature);
+    setSign(newSignature);
 
     const path = `${RNFS.ExternalStorageDirectoryPath}/Download/${Date.now()}`;
-    const payload = JSON.stringify({fullName, signature});
+    const payload = JSON.stringify({fullName, newSignature});
 
     const key = await Aes.randomKey(32);
     const iv = await Aes.randomKey(16);
